@@ -367,6 +367,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
+    const SUPABASE_URL = 'https://bjrhfvzzleaulwvbxuvr.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_MR-3w-42CnmjG7ZD7ohOBA_iJZIJJGW';
     const DEBUG_MODE = false; // 设为 true 则只测试前 3 条音频
     let submitted = false;    // 防重复提交
     let finalPayload = { user_id: "user_" + Math.random().toString(36).slice(2, 11), test_environment: {}, demographics: {}, test_results: [], qualitative_feedback: {} };
@@ -680,10 +682,27 @@
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 15000);
 
-        fetch('/api/submit', {
+        fetch(`${SUPABASE_URL}/rest/v1/survey_results`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(finalPayload),
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                user_id: finalPayload.user_id,
+                device_type: finalPayload.test_environment.device_type || null,
+                survey_timestamp: finalPayload.test_environment.timestamp || null,
+                age: finalPayload.demographics.age || null,
+                gender: finalPayload.demographics.gender || null,
+                listening_frequency: finalPayload.demographics.listening_frequency || null,
+                training_years: finalPayload.demographics.training_years || null,
+                instrument: finalPayload.demographics.instrument || null,
+                test_results: finalPayload.test_results,
+                difference_perception: finalPayload.qualitative_feedback.difference_perception || null,
+                issues: finalPayload.qualitative_feedback.issues || null
+            }),
             signal: controller.signal
         }).then(res => {
             clearTimeout(timeout);
