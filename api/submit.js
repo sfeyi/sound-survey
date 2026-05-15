@@ -47,11 +47,6 @@ module.exports = async (req, res) => {
         return res.status(200).json({ success: true });
     } catch (err) {
         console.error('Submit error:', err);
-        return res.status(500).json({ 
-            error: '服务器内部错误',
-            detail: err.message || String(err),
-            hasUrl: !!process.env.SUPABASE_URL,
-            hasKey: !!process.env.SUPABASE_ANON_KEY
-        });
+        return res.status(500).json({ error: '服务器内部错误' });
     }
 };
