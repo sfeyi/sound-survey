@@ -441,9 +441,13 @@
             if (!testInitialized) { initTest(); testInitialized = true; }
             saveProgress();
         }
-        // 离开评分页时清理 marker
+        // 离开评分页时清理 marker 和音频
         if (from === 3) {
             document.getElementById('point-marker').style.display = 'none';
+            const audio = document.getElementById('audio-el');
+            audio.pause();
+            audio.onended = null;
+            audio.onerror = null;
         }
         // 首次进入评分页，弹出引导
         if (to === 3 && !gridGuideShown) {
@@ -468,6 +472,10 @@
         if (from === 3) {
             document.getElementById('point-marker').style.display = 'none';
             document.getElementById('current-coord-display').innerHTML = "网格已就绪，等待您的评估";
+            const audio = document.getElementById('audio-el');
+            audio.pause();
+            audio.onended = null;
+            audio.onerror = null;
         }
         const current = document.getElementById(`page${from}`);
         const prev = document.getElementById(`page${to}`);
@@ -546,9 +554,15 @@
         document.getElementById('prev-audio-btn').style.display = currentAudioIndex > 0 ? 'inline-flex' : 'none';
         currentResponse = { valence_x: null, arousal_y: null, play_time: 0, first_click_time: null, final_click_time: null };
 
+        // 停掉旧音频并清理事件，防止播放中切题导致 onended 污染新状态
+        const audio = document.getElementById('audio-el');
+        audio.pause();
+        audio.onended = null;
+        audio.onerror = null;
+        audio.currentTime = 0;
+
         const currentItem = audioPlaylist[currentAudioIndex];
         if (currentItem) {
-            const audio = document.getElementById('audio-el');
             audio.src = `audio/${currentItem.instrument_type}-${currentItem.audio_condition}.mp3`;
             audio.load();
         }
