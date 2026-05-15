@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>声音物理特征与情感感知研究</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary: #5c6ac4;
+            --primary-light: #8a96d1;
+            --secondary: #d183c9;
+            --bg-glass: rgba(255, 255, 255, 0.75);
+            --text-main: #2b2d42;
+            --text-light: #8d99ae;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            margin: 0; padding: 20px;
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            color: var(--text-main);
+            background: linear-gradient(-45deg, #fbc2eb 0%, #a6c1ee 50%, #fbc2eb 100%);
+            background-size: 200% 200%;
+            animation: gentleAurora 20s ease-in-out infinite;
+            overflow-x: hidden;
+        }
+
+        @keyframes gentleAurora {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: var(--bg-glass);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            max-width: 800px; width: 100%;
+            padding: 45px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255,255,255,0.8) inset;
+            position: relative;
+        }
+
+        .page { 
+            display: none; 
+            opacity: 0;
+            transform: scale(0.98) translateY(10px);
+            transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .page.active { 
+            display: block; 
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        h2 { 
+            font-size: 32px; font-weight: 700; margin-top: 0; margin-bottom: 25px;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .form-group { margin-bottom: 25px; }
+        label { display: block; font-weight: 500; margin-bottom: 10px; color: #4a4e69; font-size: 15px; }
+        select, input, textarea {
+            width: 100%; padding: 14px 18px; 
+            border: 2px solid transparent;
+            border-radius: 14px; font-size: 15px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box; background: rgba(255,255,255,0.9);
+            color: var(--text-main);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        select:hover, input:hover, textarea:hover { background: #ffffff; }
+        select:focus, input:focus, textarea:focus {
+            outline: none; border-color: var(--primary-light); background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(92, 106, 196, 0.15);
+        }
+        select:invalid { color: #8d99ae; }
+
+        button {
+            background: var(--primary);
+            color: white; border: none; padding: 14px 32px;
+            font-size: 16px; font-weight: 600; border-radius: 14px;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            float: right; margin-top: 15px;
+            box-shadow: 0 10px 20px -10px var(--primary);
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        button:hover { transform: translateY(-3px); box-shadow: 0 15px 25px -10px var(--primary); background: #4b57a5; }
+        button:active { transform: translateY(0); }
+        button:disabled { background: #cbd5e1; box-shadow: none; transform: none; cursor: not-allowed; color: #94a3b8; }
+
+        .btn-back {
+            background: rgba(92, 106, 196, 0.06); color: var(--primary); border: 2px solid rgba(92, 106, 196, 0.3);
+            box-shadow: none; float: left; margin-top: 15px;
+        }
+        .btn-back:hover { background: rgba(92, 106, 196, 0.14); transform: translateY(-3px); box-shadow: 0 8px 16px -8px rgba(92, 106, 196, 0.3); border-color: var(--primary); }
+        #play-btn { background: var(--primary); box-shadow: 0 10px 20px -10px var(--primary); float: none; margin: 10px auto; }
+        #play-btn:hover { background: #4b57a5; }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--text-main); color: white; padding: 12px 28px;
+            border-radius: 12px; font-size: 14px; font-weight: 500;
+            opacity: 0; transition: opacity 0.4s; pointer-events: none; z-index: 1000;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        .toast.show { opacity: 1; }
+
+        .progress-bar-container {
+            width: 100%; background-color: rgba(255,255,255,0.6); border-radius: 12px; margin-bottom: 25px; overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .progress-bar {
+            height: 14px; border-radius: 12px; width: 0%; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: var(--primary);
+            background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+            background-size: 1rem 1rem;
+        }
+        .progress-bar.animating {
+            animation: progress-stripes 1s linear infinite;
+        }
+        @keyframes progress-stripes { from { background-position: 1rem 0; } to { background-position: 0 0; } }
+
+        .audio-player { 
+            text-align: center; margin: 30px 0; padding: 35px; 
+            background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,0.6)); 
+            border-radius: 20px; border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.02);
+            position: relative;
+        }
+
+        .wave-container { display: none; justify-content: center; align-items: flex-end; height: 35px; gap: 5px; margin-bottom: 20px;}
+        .wave-bar { width: 6px; background: var(--secondary); border-radius: 4px; animation: wave 0.8s ease-in-out infinite alternate; }
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; } .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.1s; }
+        @keyframes wave { 0% { height: 8px; } 100% { height: 35px; } }
+
+        #coordinate-plane {
+            width: 420px; max-width: 100%; aspect-ratio: 1 / 1; height: auto; margin: 0 auto;
+            background-color: #ffffff;
+            background-image: 
+                linear-gradient(rgba(92, 106, 196, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(92, 106, 196, 0.08) 1px, transparent 1px);
+            background-size: 21px 21px; 
+            border: 2px solid #e2e8f0; border-radius: 24px;
+            position: relative; cursor: crosshair;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.02), 0 10px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        #coordinate-plane:hover { border-color: var(--primary-light); box-shadow: inset 0 0 30px rgba(0,0,0,0.02), 0 15px 30px rgba(92, 106, 196, 0.1); }
+        
+        .axis { position: absolute; background-color: rgba(92, 106, 196, 0.4); }
+        .x-axis { width: 100%; height: 2px; top: 50%; left: 0; transform: translateY(-50%); }
+        .y-axis { height: 100%; width: 2px; left: 50%; top: 0; transform: translateX(-50%); }
+        
+        .label { position: absolute; font-size: 14px; color: #718096; font-weight: 700; pointer-events: none; background: rgba(255,255,255,0.85); padding: 6px 10px; border-radius: 8px; backdrop-filter: blur(4px); }
+        .label-top { top: 10px; left: 50%; transform: translateX(-50%); }
+        .label-bottom { bottom: 10px; left: 50%; transform: translateX(-50%); }
+        .label-left { top: 50%; left: 10px; transform: translateY(-50%); }
+        .label-right { top: 50%; right: 10px; transform: translateY(-50%); }
+        
+        #point-marker {
+            width: 18px; height: 18px; 
+            background: radial-gradient(circle, #ff4757, #ff6b81);
+            border-radius: 50%;
+            position: absolute; display: none; transform: translate(-50%, -50%) scale(0); 
+            pointer-events: none;
+            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4), inset 0 0 0 3px rgba(255,255,255,0.9);
+            animation: jellyPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes jellyPop {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .clear { clear: both; }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.6); border-left: 4px solid var(--primary); 
+            padding: 18px; border-radius: 12px; margin: 20px 0; color: #4a4e69; font-size: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+
+        .guide-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.35s;
+            border-radius: 24px;
+        }
+        .guide-overlay.show { opacity: 1; pointer-events: auto; }
+        .guide-card {
+            background: white; border-radius: 20px; padding: 28px 32px;
+            max-width: 400px; width: 90%; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            transform: scale(0.92); transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .guide-overlay.show .guide-card { transform: scale(1); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div id="page1" class="page active">
+        <h2>✨ 声音特征与情感感知</h2>
+        <p style="color: var(--text-light); font-size: 16px; line-height: 1.8;">欢迎参与我们的心理声学研究之旅。本测试旨在探索乐器音色差异是如何牵动我们情绪的。整个过程大约需要 <strong>10 分钟</strong>，希望您能享受这段声音体验。</p>
+        
+        <div class="info-card">
+            <b style="color: var(--primary);">🎧 关于听音设备：</b><br>
+            音频中包含大量低频与高频细节。为了最完美的体验，强烈建议使用<strong>耳机</strong>。若使用设备外放，请尽量找一个安静、不被打扰的角落。
+        </div>
+        
+        <div class="form-group">
+            <label>1. 请选择您当前佩戴的设备（必填）：</label>
+            <select id="device-type" required>
+                <option value="" selected disabled>点击展开列表...</option>
+                <option value="over-ear">🎧 头戴式耳机 (极佳体验)</option>
+                <option value="in-ear">👂 入耳式耳机 (推荐体验)</option>
+                <option value="mobile-speaker">📱 手机 / 平板外放</option>
+                <option value="desktop-speaker">💻 电脑桌面音箱</option>
+            </select>
+        </div>
+        <button onclick="nextPage(1, 2)">开启测试 ➔</button>
+        <div class="clear"></div>
+    </div>
+
+    <div id="page2" class="page">
+        <h2>👤 您的音乐印记</h2>
+        <p style="color: var(--text-light); margin-bottom: 25px;">每个人的音乐背景都是独一无二的，这有助于我们理解数据的多样性。</p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label>2. 年龄段：</label>
+                <select id="age" required>
+                    <option value="" selected disabled>请选择...</option>
+                    <option value="14-17">14 - 17 岁</option>
+                    <option value="18-25">18 - 25 岁</option>
+                    <option value="26-35">26 - 35 岁</option>
+                    <option value="36-45">36 - 45 岁</option>
+                    <option value="46-60">46 - 60 岁</option>
+                    <option value="60+">60 岁以上</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>3. 性别：</label>
+                <select id="gender" required>
+                    <option value="" selected disabled>请选择...</option>
+                    <option value="male">男</option><option value="female">女</option><option value="other">其他/不愿透露</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>4. 您的听歌频率：</label>
+            <select id="listening-freq" required>
+                <option value="" selected disabled>请选择...</option>
+                <option value="rarely">偶尔听听</option><option value="<1h">每天 < 1小时</option><option value="1-2h">每天 1~2小时 </option><option value=">2h">每天 2小时以上 </option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>5. 接受正规音乐训练的年限：</label>
+            <select id="training-years" required>
+                <option value="" selected disabled>请选择...</option>
+                <option value="0">无受训经验 (纯听众)</option><option value="1-3">1 - 3年 </option><option value="3-5">3 - 5年 </option><option value=">5">5年以上 </option>
+            </select>
+        </div>
+        <div class="form-group"><label>6. 若有乐器经验，最擅长的是？</label><input type="text" id="instrument" placeholder="如：钢琴、吉他，若无请填无"></div>
+        <button class="btn-back" onclick="prevPage(2, 1)">← 返回</button>
+        <button onclick="nextPage(2, 3)">进入声音实验室 🔬</button>
+        <div class="clear"></div>
+    </div>
+
+    <div id="page3" class="page">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin: 0;">🎧 听音评估</h2>
+            <span style="display:flex; align-items:center; gap:12px;">
+                <a href="javascript:void(0)" onclick="prevPage(3, 2)" style="color: var(--text-light); font-size: 12px; text-decoration: none; opacity:0.7;">✎ 修改信息</a>
+                <span id="progress-text" style="font-weight: 700; color: var(--primary); font-size: 18px; background: rgba(92, 106, 196, 0.1); padding: 5px 12px; border-radius: 20px;"></span>
+            </span>
+        </div>
+        
+        <div class="progress-bar-container"><div class="progress-bar" id="progress-bar"></div></div>
+        
+        <div class="audio-player">
+            <div class="wave-container" id="wave-anim">
+                <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+            </div>
+            <p id="audio-hint" style="font-size: 16px; font-weight: 500; color: #4a4e69;">点击播放，捕捉声音带给您的<strong>第一直觉</strong>。</p>
+            <button id="play-btn" onclick="simulateAudioPlay()">▶ 播放测试音频</button>
+            <audio id="audio-el" preload="auto"></audio>
+        </div>
+
+        <div id="coordinate-plane" onclick="recordCoordinate(event)">
+            <div class="axis x-axis"></div>
+            <div class="axis y-axis"></div>
+            <div class="label label-top">⚡ 亢奋 / 激动</div>
+            <div class="label label-bottom">🧘 平静 / 放松</div>
+            <div class="label label-left">🌧️ 负面 / 悲伤</div>
+            <div class="label label-right">☀️ 正面 / 愉悦</div>
+            <div id="point-marker"></div> 
+        </div>
+        
+        <p style="text-align: center; font-family: monospace; font-size: 15px; color: var(--primary-light); margin-top: 20px; min-height: 20px;" id="current-coord-display">网格已就绪，等待您的评估</p>
+
+        <button id="prev-audio-btn" class="btn-back" onclick="prevAudio()" style="display:none;">← 上一题</button>
+        <button id="next-audio-btn" disabled onclick="nextAudio()">下一条声音 ➔</button>
+        <div class="clear"></div>
+
+        <div class="guide-overlay" id="guide-overlay">
+            <div class="guide-card">
+                <h3 style="margin:0 0 10px; font-size: 20px; color: var(--text-main);">🎯 如何评估声音的情绪？</h3>
+                <p style="color: var(--text-light); font-size: 14px; line-height: 1.7; margin: 0 0 16px;">
+                    横轴 = <strong>正面 or 负面</strong>（效价） &nbsp;|&nbsp; 纵轴 = <strong>兴奋 or 平静</strong>（唤醒度）
+                </p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0 auto 16px; max-width: 300px;">
+                    <div style="background: rgba(255,71,87,0.06); border-radius: 10px; padding: 10px 6px; text-align: center;">
+                        <span style="font-size: 24px;">😰</span><br>
+                        <span style="font-size: 12px; color: #718096;">紧张 / 焦虑</span>
+                    </div>
+                    <div style="background: rgba(92,106,196,0.06); border-radius: 10px; padding: 10px 6px; text-align: center;">
+                        <span style="font-size: 24px;">🤩</span><br>
+                        <span style="font-size: 12px; color: #718096;">兴奋 / 激动</span>
+                    </div>
+                    <div style="background: rgba(92,106,196,0.08); border-radius: 10px; padding: 10px 6px; text-align: center;">
+                        <span style="font-size: 24px;">😢</span><br>
+                        <span style="font-size: 12px; color: #718096;">悲伤 / 忧郁</span>
+                    </div>
+                    <div style="background: rgba(209,131,201,0.06); border-radius: 10px; padding: 10px 6px; text-align: center;">
+                        <span style="font-size: 24px;">😌</span><br>
+                        <span style="font-size: 12px; color: #718096;">平静 / 放松</span>
+                    </div>
+                </div>
+                <button onclick="dismissGuide()" style="float:none; margin: 0 auto;">我知道了，开始评估</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page4" class="page">
+        <h2>📝 最后的灵感</h2>
+        <div class="info-card" style="border-color: var(--secondary); background: rgba(209, 131, 201, 0.05);">
+            测试已完成！在提交数据前，我们非常渴望听到您作为"碳基生物"的真实主观感受。
+        </div>
+        <div class="form-group"><label>7. 刚刚听了那么多，您觉得"单一的音符"和"一段旋律"在传达情绪时，感觉有何不同？</label><textarea id="feedback-diff" rows="4" placeholder="畅所欲言，您的直觉对我们很重要..."></textarea></div>
+        <div class="form-group"><label>8. 体验吐槽（遇到Bug或任何迷惑的地方）：</label><textarea id="feedback-issues" rows="3" placeholder="选填..."></textarea></div>
+        <button style="background: linear-gradient(135deg, var(--primary), var(--secondary)); box-shadow: 0 10px 20px -10px rgba(92, 106, 196, 0.35);" onclick="submitData()">完成并提交 🚀</button>
+        <div class="clear"></div>
+    </div>
+    
+    <div id="page5" class="page" style="text-align: center; padding: 70px 0;">
+        <div style="font-size: 60px; margin-bottom: 20px; animation: jellyPop 1s ease forwards;">🎉</div>
+        <h2 style="font-size: 32px; color: var(--text-main);">感谢您的宝贵数据！</h2>
+        <p style="color: var(--text-light); font-size: 16px; max-width: 400px; margin: 0 auto; line-height: 1.6;">
+            您提供的每一次点击，都在帮助我们教导人工智能更好地理解人类的音乐情感。<br><br>
+            <span style="font-size: 13px; color: #cbd5e1;">数据已安全提交至服务器，感谢您的参与！</span>
+        </p>
+    </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const DEBUG_MODE = false; // 设为 true 则只测试前 3 条音频
+    let submitted = false;    // 防重复提交
+    let finalPayload = { user_id: "user_" + Math.random().toString(36).slice(2, 11), test_environment: {}, demographics: {}, test_results: [], qualitative_feedback: {} };
+    const instruments = ["celeste", "flute", "harp", "trumpet", "viola"];
+    const conditions = ["single", "dorian", "major", "minor"];
+    let audioPlaylist = []; let currentAudioIndex = 0;
+    
+    let currentResponse = { valence_x: null, arousal_y: null, play_time: 0, first_click_time: null, final_click_time: null };
+    let recordThrottle = false;
+    let gridGuideShown = false; // 首次进入评分页弹出引导
+    let testInitialized = false; // 防止返回重进时重新洗牌
+
+    // ===== localStorage 持久化 =====
+    const STORAGE_KEY = 'sound_emotion_survey';
+    function saveProgress() {
+        const snapshot = {
+            user_id: finalPayload.user_id,
+            test_environment: finalPayload.test_environment,
+            demographics: finalPayload.demographics,
+            test_results: finalPayload.test_results,
+            currentAudioIndex: currentAudioIndex,
+            audioPlaylist: audioPlaylist
+        };
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot)); } catch(e) {}
+    }
+    function loadProgress() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return false;
+            const data = JSON.parse(raw);
+            if (data.user_id && data.test_results && data.test_results.length > 0) return data;
+        } catch(e) {}
+        return false;
+    }
+    function clearProgress() { try { localStorage.removeItem(STORAGE_KEY); } catch(e) {} }
+
+    // ===== Toast 提示 =====
+    function showToast(msg) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(el._timeout);
+        el._timeout = setTimeout(() => { el.classList.remove('show'); }, 2500);
+    }
+
+    function dismissGuide() {
+        gridGuideShown = true;
+        document.getElementById('guide-overlay').classList.remove('show');
+    }
+
+    // ===== 页面导航 =====
+    function nextPage(from, to) {
+        if (from === 1) {
+            const device = document.getElementById('device-type').value;
+            if (!device) { alert("为了数据准确性，请选择您的听音设备。"); return; }
+            finalPayload.test_environment.device_type = device; finalPayload.test_environment.timestamp = new Date().toISOString();
+        }
+        if (from === 2) {
+            const age = document.getElementById('age').value;
+            const gender = document.getElementById('gender').value;
+            const freq = document.getElementById('listening-freq').value;
+            const train = document.getElementById('training-years').value;
+            
+            if(!age || !gender || !freq || !train) {
+                alert("为保证研究严谨性，请完整填写您的音乐背景选项后再继续。");
+                return;
+            }
+            
+            finalPayload.demographics = { age: age, gender: gender, listening_frequency: freq, training_years: train, instrument: document.getElementById('instrument').value || "none" };
+            if (!testInitialized) { initTest(); testInitialized = true; }
+            saveProgress();
+        }
+        // 离开评分页时清理 marker
+        if (from === 3) {
+            document.getElementById('point-marker').style.display = 'none';
+        }
+        // 首次进入评分页，弹出引导
+        if (to === 3 && !gridGuideShown) {
+            setTimeout(() => {
+                document.getElementById('guide-overlay').classList.add('show');
+            }, 700);
+        }
+        
+        const current = document.getElementById(`page${from}`);
+        const next = document.getElementById(`page${to}`);
+        
+        current.style.opacity = 0; current.style.transform = 'scale(0.98) translateY(10px)';
+        setTimeout(() => {
+            current.classList.remove('active');
+            next.classList.add('active');
+            if (to === 3) loadAudioState();
+            setTimeout(() => { next.style.opacity = 1; next.style.transform = 'scale(1) translateY(0)'; }, 50);
+        }, 250); 
+    }
+
+    function prevPage(from, to) {
+        if (from === 3) {
+            document.getElementById('point-marker').style.display = 'none';
+            document.getElementById('current-coord-display').innerHTML = "网格已就绪，等待您的评估";
+        }
+        const current = document.getElementById(`page${from}`);
+        const prev = document.getElementById(`page${to}`);
+        current.style.opacity = 0; current.style.transform = 'scale(0.98) translateY(10px)';
+        setTimeout(() => {
+            current.classList.remove('active');
+            prev.classList.add('active');
+            setTimeout(() => { prev.style.opacity = 1; prev.style.transform = 'scale(1) translateY(0)'; }, 50);
+        }, 250);
+    }
+
+    // ===== 测试逻辑 =====
+    function constrainedShuffle(arr) {
+        // 1. Fisher-Yates 打乱
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        // 2. 多轮修复：同乐器不连续、同条件不连续 3 次
+        for (let round = 0; round < 10; round++) {
+            let fixed = false;
+            for (let i = 1; i < arr.length; i++) {
+                const hasConflict =
+                    arr[i].instrument_type === arr[i - 1].instrument_type ||
+                    (i >= 2 && arr[i].audio_condition === arr[i - 1].audio_condition &&
+                     arr[i].audio_condition === arr[i - 2].audio_condition);
+                if (!hasConflict) continue;
+
+                for (let j = i + 1; j < arr.length; j++) {
+                    // arr[j] 放到 i 是否冲突？
+                    if (arr[j].instrument_type === arr[i - 1].instrument_type) continue;
+                    if (i >= 2 && arr[j].audio_condition === arr[i - 1].audio_condition &&
+                        arr[j].audio_condition === arr[i - 2].audio_condition) continue;
+
+                    // arr[i] 放到 j 是否安全？
+                    let jSafe = true;
+                    if (j - 1 >= 0 && arr[i].instrument_type === arr[j - 1].instrument_type) jSafe = false;
+                    if (j + 1 < arr.length && arr[i].instrument_type === arr[j + 1].instrument_type) jSafe = false;
+                    if (j >= 2 && arr[i].audio_condition === arr[j - 1].audio_condition &&
+                        arr[i].audio_condition === arr[j - 2].audio_condition) jSafe = false;
+                    if (j - 1 >= 0 && j + 1 < arr.length &&
+                        arr[i].audio_condition === arr[j - 1].audio_condition &&
+                        arr[i].audio_condition === arr[j + 1].audio_condition) jSafe = false;
+                    if (j + 2 < arr.length && arr[i].audio_condition === arr[j + 1].audio_condition &&
+                        arr[i].audio_condition === arr[j + 2].audio_condition) jSafe = false;
+                    if (!jSafe) continue;
+
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                    fixed = true;
+                    break;
+                }
+            }
+            if (!fixed) break;
+        }
+    }
+
+    function initTest() {
+        audioPlaylist = [];
+        instruments.forEach(inst => { conditions.forEach(cond => { audioPlaylist.push({ audio_id: `${inst}_${cond}`, instrument_type: inst, audio_condition: cond }); }); });
+        constrainedShuffle(audioPlaylist);
+    }
+
+    function loadAudioState() {
+        const bar = document.getElementById('progress-bar');
+        const prevWidth = bar.style.width;
+        const progress = ((currentAudioIndex) / audioPlaylist.length) * 100;
+        bar.style.width = progress + '%';
+        if (prevWidth !== progress + '%') {
+            bar.classList.add('animating');
+            setTimeout(() => { bar.classList.remove('animating'); }, 1000);
+        }
+        document.getElementById('progress-text').innerText = `${currentAudioIndex + 1} / ${audioPlaylist.length}`;
+        document.getElementById('point-marker').style.display = 'none';
+        document.getElementById('current-coord-display').innerHTML = "等待打分...";
+        document.getElementById('next-audio-btn').disabled = true;
+        document.getElementById('prev-audio-btn').style.display = currentAudioIndex > 0 ? 'inline-flex' : 'none';
+        currentResponse = { valence_x: null, arousal_y: null, play_time: 0, first_click_time: null, final_click_time: null };
+
+        const currentItem = audioPlaylist[currentAudioIndex];
+        if (currentItem) {
+            const audio = document.getElementById('audio-el');
+            audio.src = `audio/${currentItem.instrument_type}-${currentItem.audio_condition}.mp3`;
+            audio.load();
+        }
+    }
+
+    function simulateAudioPlay() {
+        const audio = document.getElementById('audio-el');
+        const btn = document.getElementById('play-btn');
+        const wave = document.getElementById('wave-anim');
+        const hint = document.getElementById('audio-hint');
+
+        audio.onerror = () => {
+            wave.style.display = 'none';
+            btn.style.display = 'inline-flex';
+            btn.innerHTML = "▶ 播放测试音频";
+            btn.style.background = "var(--primary)";
+            btn.style.boxShadow = "0 10px 20px -10px var(--primary)";
+            hint.innerHTML = "点击播放，捕捉声音带给您的<strong>第一直觉</strong>。";
+            showToast('⚠️ 音频缺失，请检查 audio/ 文件夹');
+        };
+
+        audio.onended = () => {
+            wave.style.display = 'none';
+            btn.style.display = 'inline-flex';
+            btn.innerHTML = "↺ 重听";
+            btn.style.background = "var(--primary-light)";
+            btn.style.boxShadow = "none";
+            hint.innerHTML = "请在下方网格中，点击最符合您当下感受的位置";
+            currentResponse.play_time = Date.now();
+        };
+
+        audio.currentTime = 0;
+        audio.play().then(() => {
+            btn.style.display = 'none';
+            wave.style.display = 'flex';
+            hint.innerHTML = "🎵 正在播放...";
+        }).catch(() => {
+            showToast('⚠️ 音频无法播放');
+        });
+    }
+
+    function recordCoordinate(event) {
+        if (currentResponse.play_time === 0) {
+            showToast('🎧 请先点击播放按钮收听音频');
+            return;
+        }
+        if (recordThrottle) return;
+        recordThrottle = true;
+        setTimeout(() => { recordThrottle = false; }, 100);
+
+        const now = Date.now();
+        if (!currentResponse.first_click_time) {
+            currentResponse.first_click_time = now;
+        }
+        currentResponse.final_click_time = now;
+
+        const plane = document.getElementById('coordinate-plane');
+        const rect = plane.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const clickY = event.clientY - rect.top;
+        
+        const xMath = ((clickX / rect.width) * 2 - 1).toFixed(2);
+        const yMath = (1 - (clickY / rect.height) * 2).toFixed(2);
+        
+        const marker = document.getElementById('point-marker');
+        marker.style.left = clickX + 'px'; marker.style.top = clickY + 'px';
+        marker.style.display = 'block';
+        
+        marker.style.animation = 'none';
+        marker.offsetHeight; 
+        marker.style.animation = null;
+        
+        currentResponse.valence_x = parseFloat(xMath); currentResponse.arousal_y = parseFloat(yMath);
+        document.getElementById('current-coord-display').innerHTML = `<strong style="color:var(--primary)">✓ 记录成功：</strong> [ 效价 ${xMath}, 唤醒 ${yMath} ]`;
+        document.getElementById('next-audio-btn').disabled = false;
+    }
+
+    function nextAudio() {
+        const firstClickRT = currentResponse.first_click_time - currentResponse.play_time;
+        const finalDecisionRT = currentResponse.final_click_time - currentResponse.play_time;
+
+        const currentItem = audioPlaylist[currentAudioIndex];
+        
+        finalPayload.test_results.push({ 
+            audio_id: currentItem.audio_id, 
+            instrument_type: currentItem.instrument_type, 
+            audio_condition: currentItem.audio_condition, 
+            valence_x: currentResponse.valence_x, 
+            arousal_y: currentResponse.arousal_y, 
+            first_click_rt_ms: firstClickRT,
+            final_decision_rt_ms: finalDecisionRT
+        });
+        
+        currentAudioIndex++;
+        
+        if (currentAudioIndex < audioPlaylist.length && (!DEBUG_MODE || currentAudioIndex < 3)) {
+            saveProgress();
+            loadAudioState();
+            document.getElementById('play-btn').innerHTML = "▶ 播放测试音频";
+            document.getElementById('play-btn').style.background = "var(--primary)";
+            document.getElementById('play-btn').style.boxShadow = "0 10px 20px -10px var(--primary)";
+            document.getElementById('audio-hint').innerHTML = "点击播放，捕捉声音带给您的<strong>第一直觉</strong>。";
+        } else {
+            if (DEBUG_MODE) currentAudioIndex = audioPlaylist.length;
+            saveProgress();
+            nextPage(3, 4);
+        }
+    }
+
+    function prevAudio() {
+        if (currentAudioIndex <= 0) return;
+        currentAudioIndex--;
+        finalPayload.test_results.pop();
+        saveProgress();
+        loadAudioState();
+        document.getElementById('play-btn').innerHTML = "▶ 播放测试音频";
+        document.getElementById('play-btn').style.background = "var(--primary)";
+        document.getElementById('play-btn').style.boxShadow = "0 10px 20px -10px var(--primary)";
+        document.getElementById('audio-hint').innerHTML = "点击播放，捕捉声音带给您的<strong>第一直觉</strong>。";
+    }
+
+    function submitData() {
+        if (submitted) return;
+        submitted = true;
+        finalPayload.qualitative_feedback = { difference_perception: document.getElementById('feedback-diff').value, issues: document.getElementById('feedback-issues').value };
+
+        const btn = document.querySelector('#page4 button');
+        btn.textContent = '提交中...';
+        btn.disabled = true;
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
+        fetch('/api/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(finalPayload),
+            signal: controller.signal
+        }).then(res => {
+            clearTimeout(timeout);
+            if (!res.ok) throw new Error('服务器错误');
+            clearProgress();
+            nextPage(4, 5);
+        }).catch(err => {
+            clearTimeout(timeout);
+            console.error('提交失败:', err);
+            btn.textContent = '提交失败，请重试 🚀';
+            btn.disabled = false;
+            btn.style.background = '#ef4444';
+            btn.style.boxShadow = '0 10px 20px -10px #ef4444';
+            submitted = false;
+        });
+    }
+
+    // ===== 页面加载：检测未完成进度 =====
+    (function checkResume() {
+        const saved = loadProgress();
+        if (saved && saved.audioPlaylist && saved.audioPlaylist.length > 0 && confirm(`检测到您上次的测试进度（已完成 ${saved.test_results.length} 条评估），是否继续？`)) {
+            finalPayload.user_id = saved.user_id;
+            finalPayload.test_environment = saved.test_environment || {};
+            finalPayload.demographics = saved.demographics || {};
+            finalPayload.test_results = saved.test_results;
+            currentAudioIndex = saved.currentAudioIndex || saved.test_results.length;
+            audioPlaylist = saved.audioPlaylist;
+            testInitialized = true;
+            gridGuideShown = true; // 已见过引导，不再弹出
+
+            // 恢复表单字段（返回时能看到之前填的内容）
+            if (saved.test_environment.device_type) {
+                document.getElementById('device-type').value = saved.test_environment.device_type;
+            }
+            if (saved.demographics.age) {
+                document.getElementById('age').value = saved.demographics.age;
+            }
+            if (saved.demographics.gender) {
+                document.getElementById('gender').value = saved.demographics.gender;
+            }
+            if (saved.demographics.listening_frequency) {
+                document.getElementById('listening-freq').value = saved.demographics.listening_frequency;
+            }
+            if (saved.demographics.training_years) {
+                document.getElementById('training-years').value = saved.demographics.training_years;
+            }
+            if (saved.demographics.instrument && saved.demographics.instrument !== 'none') {
+                document.getElementById('instrument').value = saved.demographics.instrument;
+            }
+
+            // 直接跳转到评分页
+            document.getElementById('page1').classList.remove('active');
+            document.getElementById('page3').classList.add('active');
+            document.getElementById('page3').style.opacity = '1';
+            document.getElementById('page3').style.transform = 'scale(1) translateY(0)';
+            loadAudioState();
+            document.getElementById('play-btn').innerHTML = "▶ 播放测试音频";
+            document.getElementById('play-btn').style.background = "var(--primary)";
+            document.getElementById('play-btn').style.boxShadow = "0 10px 20px -10px var(--primary)";
+            document.getElementById('audio-hint').innerHTML = "点击播放，捕捉声音带给您的<strong>第一直觉</strong>。";
+        }
+    })();
+</script>
+
+</body>
+</html>

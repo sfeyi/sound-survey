@@ -1,0 +1,8 @@
+{
+    "name": "sound-emotion-survey",
+    "private": true,
+    "description": "声音物理特征与情感感知研究问卷",
+    "dependencies": {
+        "@supabase/supabase-js": "^2.39.0"
+    }
+}
