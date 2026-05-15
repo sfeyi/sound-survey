@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>声音物理特征与情感感知研究</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
-
         :root {
             --primary: #5c6ac4;
             --primary-light: #8a96d1;
@@ -17,7 +15,7 @@
         }
 
         body {
-            font-family: 'Noto Sans SC', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
             margin: 0; padding: 20px;
             min-height: 100vh;
             display: flex; justify-content: center; align-items: center;
@@ -598,6 +596,14 @@
         };
 
         audio.currentTime = 0;
+        
+        // 加载态：如果音频还没缓冲好
+        if (audio.readyState < 2) {
+            btn.innerHTML = "⏳ 加载中...";
+            btn.style.background = "var(--text-light)";
+            btn.style.boxShadow = "none";
+        }
+
         audio.play().then(() => {
             btn.style.display = 'none';
             wave.style.display = 'flex';
@@ -608,6 +614,15 @@
                 const nextItem = audioPlaylist[nextIndex];
                 const preload = document.getElementById('audio-preload');
                 preload.src = `audio/${nextItem.instrument_type}-${nextItem.audio_condition}.mp3`;
+            }
+            // 预加载前后各 2 条到浏览器缓存
+            for (let offset = -2; offset <= 2; offset++) {
+                if (offset === 0) continue;
+                const idx = currentAudioIndex + offset;
+                if (idx >= 0 && idx < audioPlaylist.length) {
+                    const item = audioPlaylist[idx];
+                    fetch(`audio/${item.instrument_type}-${item.audio_condition}.mp3`, { mode: 'no-cors' }).catch(() => {});
+                }
             }
         }).catch(() => {
             showToast('⚠️ 音频无法播放');
