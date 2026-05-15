@@ -49,7 +49,7 @@
             display: none; 
             opacity: 0;
             transform: scale(0.98) translateY(10px);
-            transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .page.active { 
             display: block; 
@@ -295,6 +295,7 @@
             <p id="audio-hint" style="font-size: 16px; font-weight: 500; color: #4a4e69;">点击播放，捕捉声音带给您的<strong>第一直觉</strong>。</p>
             <button id="play-btn" onclick="simulateAudioPlay()">▶ 播放测试音频</button>
             <audio id="audio-el" preload="auto"></audio>
+            <audio id="audio-preload" preload="auto" style="display:none;"></audio>
         </div>
 
         <div id="coordinate-plane" onclick="recordCoordinate(event)">
@@ -484,7 +485,7 @@
             current.classList.remove('active');
             prev.classList.add('active');
             setTimeout(() => { prev.style.opacity = 1; prev.style.transform = 'scale(1) translateY(0)'; }, 50);
-        }, 250);
+        }, 150);
     }
 
     // ===== 测试逻辑 =====
@@ -564,8 +565,10 @@
         const currentItem = audioPlaylist[currentAudioIndex];
         if (currentItem) {
             audio.src = `audio/${currentItem.instrument_type}-${currentItem.audio_condition}.mp3`;
-            audio.load();
         }
+        // 清掉预加载残留
+        const preload = document.getElementById('audio-preload');
+        preload.removeAttribute('src');
     }
 
     function simulateAudioPlay() {
@@ -599,6 +602,13 @@
             btn.style.display = 'none';
             wave.style.display = 'flex';
             hint.innerHTML = "🎵 正在播放...";
+            // 后台预加载下一题音频
+            const nextIndex = currentAudioIndex + 1;
+            if (nextIndex < audioPlaylist.length) {
+                const nextItem = audioPlaylist[nextIndex];
+                const preload = document.getElementById('audio-preload');
+                preload.src = `audio/${nextItem.instrument_type}-${nextItem.audio_condition}.mp3`;
+            }
         }).catch(() => {
             showToast('⚠️ 音频无法播放');
         });
