@@ -132,7 +132,7 @@
             position: relative;
         }
 
-        .wave-container { display: none; justify-content: center; align-items: flex-end; height: 35px; gap: 5px; margin-bottom: 20px;}
+        .wave-container { visibility: hidden; justify-content: center; align-items: flex-end; height: 35px; gap: 5px; margin-bottom: 20px;}
         .wave-bar { width: 6px; background: var(--secondary); border-radius: 4px; animation: wave 0.8s ease-in-out infinite alternate; }
         .wave-bar:nth-child(2) { animation-delay: 0.1s; } .wave-bar:nth-child(3) { animation-delay: 0.2s; }
         .wave-bar:nth-child(4) { animation-delay: 0.1s; }
@@ -576,7 +576,7 @@
         const hint = document.getElementById('audio-hint');
 
         audio.onerror = () => {
-            wave.style.display = 'none';
+            wave.style.visibility = 'hidden';
             btn.style.display = 'inline-flex';
             btn.innerHTML = "▶ 播放测试音频";
             btn.style.background = "var(--primary)";
@@ -586,13 +586,12 @@
         };
 
         audio.onended = () => {
-            wave.style.display = 'none';
+            wave.style.visibility = 'hidden';
             btn.style.display = 'inline-flex';
             btn.innerHTML = "↺ 重听";
             btn.style.background = "var(--primary-light)";
             btn.style.boxShadow = "none";
             hint.innerHTML = "请在下方网格中，点击最符合您当下感受的位置";
-            currentResponse.play_time = Date.now();
         };
 
         audio.currentTime = 0;
@@ -605,8 +604,9 @@
         }
 
         audio.play().then(() => {
+            currentResponse.play_time = Date.now();
             btn.style.display = 'none';
-            wave.style.display = 'flex';
+            wave.style.visibility = 'visible';
             hint.innerHTML = "🎵 正在播放...";
             // 后台预加载下一题音频
             const nextIndex = currentAudioIndex + 1;
@@ -630,7 +630,7 @@
     }
 
     function recordCoordinate(event) {
-        if (currentResponse.play_time === 0) {
+        if (!currentResponse.play_time) {
             showToast('🎧 请先点击播放按钮收听音频');
             return;
         }
