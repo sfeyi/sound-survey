@@ -570,6 +570,14 @@
         // 清掉预加载残留
         const preload = document.getElementById('audio-preload');
         preload.removeAttribute('src');
+
+        // 恢复播放按钮
+        const btn = document.getElementById('play-btn');
+        btn.style.display = 'inline-flex';
+        btn.innerHTML = '▶ 播放测试音频';
+        btn.style.background = 'var(--primary)';
+        btn.style.boxShadow = '0 10px 20px -10px var(--primary)';
+        document.getElementById('audio-hint').innerHTML = "点击播放，捕捉声音带给您的<strong>第一直觉</strong>。";
     }
 
     function simulateAudioPlay() {
@@ -689,10 +697,6 @@
         if (currentAudioIndex < audioPlaylist.length && (!DEBUG_MODE || currentAudioIndex < 3)) {
             saveProgress();
             loadAudioState();
-            document.getElementById('play-btn').innerHTML = "▶ 播放测试音频";
-            document.getElementById('play-btn').style.background = "var(--primary)";
-            document.getElementById('play-btn').style.boxShadow = "0 10px 20px -10px var(--primary)";
-            document.getElementById('audio-hint').innerHTML = "点击播放，捕捉声音带给您的<strong>第一直觉</strong>。";
         } else {
             if (DEBUG_MODE) currentAudioIndex = audioPlaylist.length;
             saveProgress();
@@ -706,10 +710,6 @@
         finalPayload.test_results.pop();
         saveProgress();
         loadAudioState();
-        document.getElementById('play-btn').innerHTML = "▶ 播放测试音频";
-        document.getElementById('play-btn').style.background = "var(--primary)";
-        document.getElementById('play-btn').style.boxShadow = "0 10px 20px -10px var(--primary)";
-        document.getElementById('audio-hint').innerHTML = "点击播放，捕捉声音带给您的<strong>第一直觉</strong>。";
     }
 
     function submitData() {
@@ -801,10 +801,6 @@
             document.getElementById('page3').style.opacity = '1';
             document.getElementById('page3').style.transform = 'scale(1) translateY(0)';
             loadAudioState();
-            document.getElementById('play-btn').innerHTML = "▶ 播放测试音频";
-            document.getElementById('play-btn').style.background = "var(--primary)";
-            document.getElementById('play-btn').style.boxShadow = "0 10px 20px -10px var(--primary)";
-            document.getElementById('audio-hint').innerHTML = "点击播放，捕捉声音带给您的<strong>第一直觉</strong>。";
         }
     })();
 </script>
