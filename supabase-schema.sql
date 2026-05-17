@@ -23,3 +23,7 @@ ALTER TABLE survey_results ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "allow_insert" ON survey_results
     FOR INSERT
     WITH CHECK (true);
+
+-- 授予 anon 角色必要权限
+GRANT INSERT ON survey_results TO anon;
+GRANT USAGE ON SEQUENCE survey_results_id_seq TO anon;
