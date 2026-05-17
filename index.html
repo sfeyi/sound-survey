@@ -573,7 +573,7 @@
 
         // 恢复播放按钮
         const btn = document.getElementById('play-btn');
-        btn.style.display = 'inline-flex';
+        btn.style.visibility = 'visible';
         btn.innerHTML = '▶ 播放测试音频';
         btn.style.background = 'var(--primary)';
         btn.style.boxShadow = '0 10px 20px -10px var(--primary)';
@@ -588,7 +588,7 @@
 
         audio.onerror = () => {
             wave.style.visibility = 'hidden';
-            btn.style.display = 'inline-flex';
+            btn.style.visibility = 'visible';
             btn.innerHTML = "▶ 播放测试音频";
             btn.style.background = "var(--primary)";
             btn.style.boxShadow = "0 10px 20px -10px var(--primary)";
@@ -598,7 +598,7 @@
 
         audio.onended = () => {
             wave.style.visibility = 'hidden';
-            btn.style.display = 'inline-flex';
+            btn.style.visibility = 'visible';
             btn.innerHTML = "↺ 重听";
             btn.style.background = "var(--primary-light)";
             btn.style.boxShadow = "none";
@@ -616,7 +616,7 @@
 
         audio.play().then(() => {
             currentResponse.play_time = Date.now();
-            btn.style.display = 'none';
+            btn.style.visibility = 'hidden';
             wave.style.visibility = 'visible';
             hint.innerHTML = "🎵 正在播放...";
             // 后台预加载下一题音频
