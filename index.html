@@ -132,7 +132,7 @@
             position: relative;
         }
 
-        .wave-container { visibility: hidden; justify-content: center; align-items: flex-end; height: 35px; gap: 5px; margin-bottom: 20px;}
+        .wave-container { display: flex; visibility: hidden; justify-content: center; align-items: flex-end; height: 35px; gap: 5px; margin-bottom: 20px;}
         .wave-bar { width: 6px; background: var(--secondary); border-radius: 4px; animation: wave 0.8s ease-in-out infinite alternate; }
         .wave-bar:nth-child(2) { animation-delay: 0.1s; } .wave-bar:nth-child(3) { animation-delay: 0.2s; }
         .wave-bar:nth-child(4) { animation-delay: 0.1s; }
@@ -440,9 +440,10 @@
             if (!testInitialized) { initTest(); testInitialized = true; }
             saveProgress();
         }
-        // 离开评分页时清理 marker 和音频
+        // 离开评分页时清理 marker、音频和波形
         if (from === 3) {
             document.getElementById('point-marker').style.display = 'none';
+            document.getElementById('wave-anim').style.visibility = 'hidden';
             const audio = document.getElementById('audio-el');
             audio.pause();
             audio.onended = null;
@@ -470,6 +471,7 @@
     function prevPage(from, to) {
         if (from === 3) {
             document.getElementById('point-marker').style.display = 'none';
+            document.getElementById('wave-anim').style.visibility = 'hidden';
             document.getElementById('current-coord-display').innerHTML = "网格已就绪，等待您的评估";
             const audio = document.getElementById('audio-el');
             audio.pause();
@@ -559,6 +561,7 @@
         audio.onended = null;
         audio.onerror = null;
         audio.currentTime = 0;
+        document.getElementById('wave-anim').style.visibility = 'hidden';
 
         const currentItem = audioPlaylist[currentAudioIndex];
         if (currentItem) {
