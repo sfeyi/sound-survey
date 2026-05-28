@@ -369,8 +369,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
-    const SUPABASE_URL = 'https://bjrhfvzzleaulwvbxuvr.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_MR-3w-42CnmjG7ZD7ohOBA_iJZIJJGW';
+    // 部署时替换为你的 Supabase 项目 URL 和 anon key
+    const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+    const SUPABASE_KEY = 'YOUR_ANON_KEY';
     const DEBUG_MODE = false; // 设为 true 则只测试前 3 条音频
     let submitted = false;    // 防重复提交
     let finalPayload = { user_id: "user_" + Math.random().toString(36).slice(2, 11), test_environment: {}, demographics: {}, test_results: [], qualitative_feedback: {} };
